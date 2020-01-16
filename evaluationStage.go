@@ -325,7 +325,22 @@ func makeAccessorStage(pair []string) evaluationOperator {
 				coreValue = coreValue.Elem()
 			}
 
-			if coreValue.Kind() != reflect.Struct {
+			// if this is a map, try looking up the key.
+			if coreValue.Kind() == reflect.Map {
+				var ok bool
+				mapValue := coreValue.Interface()
+				switch mapValue.(type) {
+				case MapParameters:
+					value, err = mapValue.(MapParameters).Get(pair[i])
+					ok = err == nil
+				default:
+					value, ok = mapValue.(map[string]interface{})[pair[i]]
+				}
+				if !ok {
+					return nil, errors.New("No key '" + pair[i] + "' present on parameter '" + pair[i-1] + "'")
+				}
+				continue
+			} else if coreValue.Kind() != reflect.Struct {
 				return nil, errors.New("Unable to access '" + pair[i] + "', '" + pair[i-1] + "' is not a struct")
 			}
 
