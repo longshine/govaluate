@@ -327,14 +327,13 @@ func makeAccessorStage(pair []string) evaluationOperator {
 
 			// if this is a map, try looking up the key.
 			if coreValue.Kind() == reflect.Map {
-				var ok bool
-				mapValue := coreValue.Interface()
-				switch mapValue.(type) {
+				ok := false
+				switch t := coreValue.Interface().(type) {
 				case MapParameters:
-					value, err = mapValue.(MapParameters).Get(pair[i])
+					value, err = t.Get(pair[i])
 					ok = err == nil
-				default:
-					value, ok = mapValue.(map[string]interface{})[pair[i]]
+				case map[string]interface{}:
+					value, ok = t[pair[i]]
 				}
 				if !ok {
 					return nil, errors.New("No key '" + pair[i] + "' present on parameter '" + pair[i-1] + "'")
